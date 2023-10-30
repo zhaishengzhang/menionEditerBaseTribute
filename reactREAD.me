@@ -1,0 +1,178 @@
+// 使用方法：打包完后使用js引入, 调整了tribute库里边的部分代码，使得它可以在metion部分支持传入react组件， 在metion下拉添加头部和尾部组件。及多提示符的支持。使用方法不变。
+import React, { useEffect, useMemo, useRef } from "react";
+// import Tribute from "tributejs";
+// import {
+//   TributeSearchOpts,
+//   TributeCollection,
+//   TributeOptions,
+// } from "tributejs";
+import ContentEditable from "react-contenteditable";
+// import ImageUploader from 'react-images-upload';
+import "./index.scss";
+
+export type ContentEditableEvent = React.SyntheticEvent<any, Event> & {
+  target: { value: string };
+};
+export type Modify<T, R> = Pick<T, Exclude<keyof T, keyof R>> & R;
+export type DivProps = Modify<
+  JSX.IntrinsicElements["div"],
+  { onChange: (event: ContentEditableEvent)=> void}
+>;
+
+export type TributeSearchOpts = {
+    pre: string;
+    post: string;
+    skip: boolean;
+};
+
+export type TributeItem<T extends object> = {
+  index: number;
+  original: T;
+  score: number;
+  string: string;
+};
+
+
+// TributeSearchOpts
+// console.log("Tribute::", Tribute)
+
+
+export interface ITribute {
+  trigger?: string;
+  // element to target for @mentions
+  // iframe?: any;
+
+  selectClass?: string;
+  containerClass?: string;
+  itemClass?: string;
+
+
+  selectTemplate?: (item: TributeItem<any>) => string;
+
+
+  menuItemTemplate?: (item: TributeItem<any>) => string;
+
+  // template for when no match is found (optional),
+  // If no template is provided, menu is hidden.
+  noMatchTemplate?: () => string;
+
+  // specify an alternative parent container for the menu
+  menuContainer?: Element;
+
+  // column to search against in the object (accepts function or string)
+  lookup?: string | ((item: any, mentionText: string) => string);
+
+  // column that contains the content to insert by default
+  fillAttr?: string;
+
+
+  values:
+    | Array<{ [key: string]: any }>
+    | ((
+        text: string,
+        cb: (result: Array<{ [key: string]: any }>) => void
+      ) => void);
+
+  // specify whether a space is required before the trigger character
+  requireLeadingSpace?: boolean;
+
+  // specify whether a space is allowed in the middle of mentions
+  allowSpaces?: boolean;
+
+  // (defaults to empty space if undefined)
+  replaceTextSuffix?: string;
+
+  //specify whether the menu should be positioned
+  positionMenu?: boolean;
+
+  //specify whether to put Tribute in autocomplete mode
+  autocompleteMode?: boolean;
+
+  // Customize the elements used to wrap matched strings within the results list
+  searchOpts?: TributeSearchOpts;
+
+  // require X number of characters to be entered before menu shows
+  menuShowMinLength?: number;
+
+  menuTopContent?: Element,
+  menuBottomContent?: Element,
+}
+
+export interface IAppProps extends DivProps {
+  // value?: InnerHTML;
+  id: string;
+  html: string;
+  disabled?: boolean;
+  tagName?: string;
+  className?: string;
+  style?: object;
+  placeholder?: string;
+  innerRef?: React.RefObject<HTMLElement> | any;
+  onSelect?: (node?: any) => any;
+  onFocus?: (node?: any) => any;
+  onKeyUp?: (e?: any) => any;
+//   TributeOptions: ITribute;
+  // collection: Array<any>;
+  tribute: any
+}
+const CMention: React.FC<IAppProps> = ({
+  id,
+  onSelect,
+  onFocus,
+  onBlur,
+  onChange,
+  onKeyUp,
+  // value,
+  disabled,
+  tagName,
+  className,
+  html,
+  style,
+  placeholder,
+  innerRef,
+//   TributeOptions,
+  // collection,
+  tribute,
+  // ...restProps
+}) => {
+  const idName = useMemo(() => `${id}`, [id]);
+  useEffect(() => {
+    // const tribute1 = new Tribute({
+    //     ...collection[0]
+    // });
+    const ele: any = document.getElementById(idName);
+    tribute.attach(ele);
+  }, []);
+
+  useEffect(() => {
+    document
+      .querySelector(`#${idName}`)
+      ?.addEventListener("tribute-replaced", (e: any) => {
+        onSelect && e?.detail?.item?.original && onSelect(e.detail.item);
+      });
+  }, []);
+
+
+  useEffect(() => {
+    setTimeout(() => {
+      const ele: any = document.querySelector(`#${idName}`);
+      ele && (ele.contentEditable = !disabled);
+    }, 1000);
+  }, [disabled]);
+  return (
+    <ContentEditable
+      id={idName}
+      className={`xxx`}
+      innerRef={innerRef}
+      html={(html) }// || `<span class="placeholder" contenteditable="false">${placeholder}</span>` || "")}
+      onChange={onChange}
+      onKeyUp = {onKeyUp}
+      onBlur={onBlur}
+      onFocus={onFocus}
+      style={style}
+      tagName={tagName || "div"}
+    ></ContentEditable>
+  );
+};
+
+export default CMention;
